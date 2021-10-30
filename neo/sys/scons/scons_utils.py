@@ -1,5 +1,10 @@
 # -*- mode: python -*-
-import sys, os, string, time, commands, re, pickle, StringIO, popen2, commands, pdb, zipfile, tempfile
+
+#import sys, os, string, time, commands, re, pickle, StringIO, popen2, commands, pdb, zipfile, tempfile
+# popen2 is replaced by subprocess 
+# goes the same go for commands?
+
+import sys, os, subprocess, string, time, re, pickle,io , pdb, zipfile, tempfile
 import SCons
 
 # need an Environment and a matching buffered_spawn API .. encapsulate
@@ -16,12 +21,12 @@ class idBuffering:
 			command_string += i
 		try:
 			retval = self.env['PSPAWN']( sh, escape, cmd, args, env, stdout, stderr )
-		except OSError, x:
+		except OSError as x:
 			if x.errno != 10:
 				raise x
-			print 'OSError ignored on command: %s' % command_string
+			print ('OSError ignored on command: %s' % command_string)
 			retval = 0
-		print command_string
+		print(command_string)
 		if ( retval != 0 or not self.silent ):
 			sys.stdout.write( stdout.getvalue() )
 			sys.stderr.write( stderr.getvalue() )
@@ -30,7 +35,7 @@ class idBuffering:
 class idSetupBase:
 	
 	def SimpleCommand( self, cmd ):
-		print cmd
+		print(cmd) 
 		ret = commands.getstatusoutput( cmd )
 		if ( len( ret[ 1 ] ) ):
 			sys.stdout.write( ret[ 1 ] )
@@ -40,7 +45,7 @@ class idSetupBase:
 		return ret[ 1 ]
 
 	def TrySimpleCommand( self, cmd ):
-		print cmd
+		print(cmd)
 		ret = commands.getstatusoutput( cmd )
 		sys.stdout.write( ret[ 1 ] )
 
@@ -105,7 +110,7 @@ def checkLDD( target, source, env ):
 		Exit(1)
 	( status, output ) = commands.getstatusoutput( 'ldd -r %s' % file )
 	if ( status != 0 ):
-		print 'ERROR: ldd command returned with exit code %d' % ldd_ret
+		print ('ERROR: ldd command returned with exit code %d' % ldd_ret)
 		os.system( 'rm %s' % target[ 0 ] )
 		sys.exit(1)
 	lines = string.split( output, '\n' )
@@ -120,8 +125,8 @@ def checkLDD( target, source, env ):
 			except:
 				have_undef = 1
 	if ( have_undef ):
-		print output
-		print "ERROR: undefined symbols"
+		print (output)
+		print ("ERROR: undefined symbols")
 		os.system('rm %s' % target[0])
 		sys.exit(1)
 
@@ -131,7 +136,7 @@ def SharedLibrarySafe( env, target, source ):
 	return ret
 
 def NotImplementedStub( *whatever ):
-	print 'Not Implemented'
+	print ('Not Implemented')
 	sys.exit( 1 )
 
 # --------------------------------------------------------------------
@@ -168,7 +173,7 @@ def SetupUtils( env ):
 		env.PreBuildSDK = sdk.PreBuildSDK
 		env.BuildSDK = sdk.BuildSDK
 	except:
-		print 'SDK.py hookup failed'
+		print('SDK.py hookup failed')
 		env.PreBuildSDK = NotImplementedStub
 		env.BuildSDK = NotImplementedStub
 	try:
@@ -176,7 +181,7 @@ def SetupUtils( env ):
 		setup = Setup.idSetup()
 		env.BuildSetup = setup.BuildSetup
 	except:
-		print 'Setup.py hookup failed'
+		print ('Setup.py hookup failed')
 		env.BuildSetup = NotImplementedStub
 
 def BuildList( s_prefix, s_string ):
